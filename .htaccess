@@ -1,0 +1,11 @@
+Options -MultiViews
+RewriteEngine On
+
+RewriteBase /proweblanjut-crud-a12-2025-07414
+
+# Let real files and folders through (CSS, JS, images, etc.)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Route everything else to index.php
+RewriteRule ^ index.php [QSA,L]
