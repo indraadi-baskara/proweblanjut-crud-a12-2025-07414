@@ -4,7 +4,7 @@ Aplikasi manajemen inventaris barang (CRUD) yang dibangun menggunakan PHP 8.2 na
 
 > **Mata Kuliah:** Pemrograman Web Lanjut  
 > **Kelas:** A12  
-> **Tahun:** 2025
+> **Tahun:** 2026
 
 ## Fitur Aplikasi
 
