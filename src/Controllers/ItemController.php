@@ -171,7 +171,7 @@ final class ItemController
 
     private function redirect(string $url): never
     {
-        header("Location: " . $url);
+        header("Location: " . BASE_URL . $url);
         exit();
     }
 }
