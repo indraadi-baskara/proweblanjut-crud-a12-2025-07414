@@ -12,8 +12,8 @@ final class ItemRepository
 {
     private readonly PDO $pdo;
 
-    private const int LOW_STOCK_THRESHOLD = 5;
-    private const int PER_PAGE = 10;
+    private const LOW_STOCK_THRESHOLD = 5;
+    private const PER_PAGE = 10;
 
     public function __construct()
     {
