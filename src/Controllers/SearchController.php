@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Repositories\ItemRepository;
 
 final class SearchController
@@ -17,6 +18,9 @@ final class SearchController
 
     public function search(): void
     {
+        Auth::requireAuth();
+
+        $user = Auth::currentUser();
         $search = isset($_GET["search"]) ? trim($_GET["search"]) : "";
         $page = isset($_GET["page"]) ? max(1, (int) $_GET["page"]) : 1;
 
@@ -25,8 +29,8 @@ final class SearchController
             $search = mb_substr($search, 0, 100);
         }
 
-        $result = $this->repo->paginate($page, $search);
-        $lowStock = $this->repo->findLowStock();
+        $result = $this->repo->paginate($page, $search, $user->id);
+        $lowStock = $this->repo->findLowStock($user->id);
         $threshold = $this->repo->getLowStockThreshold();
 
         // Partial render for fetch()-based live search,
