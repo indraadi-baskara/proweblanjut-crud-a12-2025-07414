@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Repositories\ItemRepository;
 
 final class AlertController
@@ -17,7 +18,10 @@ final class AlertController
 
     public function lowStock(): void
     {
-        $items = $this->repo->findLowStock();
+        Auth::requireAuth();
+
+        $user = Auth::currentUser();
+        $items = $this->repo->findLowStock($user->id);
         $threshold = $this->repo->getLowStockThreshold();
 
         if ($this->isAjax()) {
