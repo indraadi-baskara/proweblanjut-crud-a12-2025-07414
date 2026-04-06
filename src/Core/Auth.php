@@ -44,7 +44,9 @@ final class Auth
         // No active session, try remember-me cookie
         if (isset($_COOKIE[self::COOKIE_REMEMBER])) {
             $repo = new UserRepository();
-            $result = $repo->verifyRememberToken($_COOKIE[self::COOKIE_REMEMBER]);
+            $result = $repo->verifyRememberToken(
+                $_COOKIE[self::COOKIE_REMEMBER],
+            );
 
             if ($result !== null) {
                 self::$currentUser = $result["user"];
@@ -141,7 +143,7 @@ final class Auth
     {
         if (!self::isAuthenticated()) {
             header("Location: " . BASE_URL . "/auth/login");
-            exit;
+            exit();
         }
     }
 
@@ -174,31 +176,16 @@ final class Auth
 
         // Session lifetime: 1 hour
         ini_set("session.gc_maxlifetime", "3600");
+        session_start();
     }
 
     private static function setRememberCookie(string $token): void
     {
-        setcookie(
-            name: self::COOKIE_REMEMBER,
-            value: $token,
-            expires_at: time() + self::COOKIE_EXPIRY,
-            path: "/",
-            secure: false, // XAMPP localhost is HTTP
-            httponly: true, // Cannot access via JS
-            samesite: "Strict",
-        );
+        setcookie(self::COOKIE_REMEMBER, $token, time() + self::COOKIE_EXPIRY);
     }
 
     private static function clearRememberCookie(): void
     {
-        setcookie(
-            name: self::COOKIE_REMEMBER,
-            value: "",
-            expires_at: time() - 3600,
-            path: "/",
-            secure: false,
-            httponly: true,
-            samesite: "Strict",
-        );
+        setcookie(self::COOKIE_REMEMBER, "", time() - 3600);
     }
 }

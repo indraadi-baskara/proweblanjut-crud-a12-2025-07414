@@ -21,7 +21,7 @@ use App\Controllers\AuthController;
 Autoloader::register(__DIR__ . "/src");
 
 // Boot session for CSRF + Auth
-session_start();
+// session_start();
 define("BASE_URL", "/proweblanjut-crud-a12-2025-07414");
 
 // Initialize authentication system (restore from session or remember-me cookie)
@@ -63,20 +63,16 @@ match (true) {
     $method === "GET" && $uri === "/auth/register" => $auth->register(),
     $method === "POST" && $uri === "/auth/store" => $auth->store(),
     $method === "POST" && $uri === "/auth/logout" => $auth->logout(),
-
     // Item routes (protected)
     $method === "GET" && $uri === "/items/create" => $item->create(),
     $method === "POST" && $uri === "/items/store" => $item->store(),
     $method === "GET" && $uri === "/items/edit" => $item->edit(),
     $method === "POST" && $uri === "/items/update" => $item->update(),
     $method === "POST" && $uri === "/items/delete" => $item->delete(),
-
     // Low-stock alert (protected)
     $method === "GET" && $uri === "/alerts/low-stock" => $alert->lowStock(),
-
     // Index / search (protected, SearchController handles both)
     $method === "GET" && $uri === "/" => $search->search(),
-
     // 404 fallback
     default => (static function () {
         http_response_code(404);

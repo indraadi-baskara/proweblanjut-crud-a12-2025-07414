@@ -75,7 +75,7 @@ DELETE CASCADE,
 INSERT INTO users
     (username, email, password_hash)
 VALUES
-    ('admin', 'admin@localhost', '$2y$10$h6EZ.2TLqL0r/h5uKgZvP.hGgWO9h9cR7Z.5uG.Q/g8.mK5JqOUDu');
+    ('admin', 'admin@localhost', '$2y$12$S5q6NT.tibKp.UmbJGVu6ewMJanfIgPb7zAQwOzzaLj9UCiCNenli');
 
 -- -------------------------------------------------------------------------
 -- Seed: Sample items (owned by admin, id=1)
