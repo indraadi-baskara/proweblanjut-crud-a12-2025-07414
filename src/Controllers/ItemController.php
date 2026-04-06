@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
 use App\Models\Item;
 use App\Repositories\ItemRepository;
 
@@ -18,11 +19,14 @@ final class ItemController
 
     public function index(): void
     {
+        Auth::requireAuth();
+
+        $user = Auth::currentUser();
         $page = isset($_GET["page"]) ? (int) $_GET["page"] : 1;
         $search = isset($_GET["search"]) ? trim($_GET["search"]) : "";
 
-        $result = $this->repo->paginate($page, $search);
-        $lowStock = $this->repo->findLowStock();
+        $result = $this->repo->paginate($page, $search, $user->id);
+        $lowStock = $this->repo->findLowStock($user->id);
         $threshold = $this->repo->getLowStockThreshold();
 
         require __DIR__ . "/../../views/items/index.php";
@@ -30,12 +34,14 @@ final class ItemController
 
     public function create(): void
     {
+        Auth::requireAuth();
         require __DIR__ . "/../../views/items/create.php";
     }
 
     public function store(): void
     {
-        $this->verifyCsrf();
+        Auth::requireAuth();
+        Auth::verifyCsrf();
 
         $errors = $this->validate($_POST);
 
@@ -45,7 +51,9 @@ final class ItemController
             return;
         }
 
+        $user = Auth::currentUser();
         $id = $this->repo->create(
+            userId: $user->id,
             itemName: trim($_POST["item_name"]),
             quantity: (int) $_POST["quantity"],
             price: (float) $_POST["price"],
@@ -57,13 +65,15 @@ final class ItemController
 
     public function edit(): void
     {
+        Auth::requireAuth();
         $item = $this->resolveItem();
         require __DIR__ . "/../../views/items/edit.php";
     }
 
     public function update(): void
     {
-        $this->verifyCsrf();
+        Auth::requireAuth();
+        Auth::verifyCsrf();
 
         $item = $this->resolveItem();
         $errors = $this->validate($_POST);
@@ -74,8 +84,10 @@ final class ItemController
             return;
         }
 
+        $user = Auth::currentUser();
         $this->repo->update(
             id: $item->id,
+            userId: $user->id,
             itemName: trim($_POST["item_name"]),
             quantity: (int) $_POST["quantity"],
             price: (float) $_POST["price"],
@@ -87,12 +99,14 @@ final class ItemController
 
     public function delete(): void
     {
-        $this->verifyCsrf();
+        Auth::requireAuth();
+        Auth::verifyCsrf();
 
+        $user = Auth::currentUser();
         $id = isset($_POST["id"]) ? (int) $_POST["id"] : 0;
 
         if ($id > 0) {
-            $this->repo->delete($id);
+            $this->repo->delete($id, $user->id);
         }
 
         $this->redirect("/?flash=deleted");
@@ -100,16 +114,18 @@ final class ItemController
 
     /**
      * Resolve ?id= from GET or POST, abort with 404 if not found.
+     * Validates ownership by current user.
      */
     private function resolveItem(): Item
     {
+        $user = Auth::currentUser();
         $id = match (true) {
             isset($_GET["id"]) => (int) $_GET["id"],
             isset($_POST["id"]) => (int) $_POST["id"],
             default => 0,
         };
 
-        $item = $id > 0 ? $this->repo->findById($id) : null;
+        $item = $id > 0 ? $this->repo->findById($id, $user->id) : null;
 
         if ($item === null) {
             http_response_code(404);
@@ -154,19 +170,6 @@ final class ItemController
         }
 
         return $errors;
-    }
-
-    private function verifyCsrf(): void
-    {
-        $token = $_POST["csrf_token"] ?? "";
-
-        if (
-            empty($_SESSION["csrf_token"]) ||
-            !hash_equals($_SESSION["csrf_token"], $token)
-        ) {
-            http_response_code(403);
-            exit("Invalid CSRF token.");
-        }
     }
 
     private function redirect(string $url): never
