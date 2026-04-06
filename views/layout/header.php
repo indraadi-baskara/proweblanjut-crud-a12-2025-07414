@@ -1,4 +1,6 @@
 <?php declare(strict_types=1);
+use App\Core\Auth;
+
 $flash = $_GET["flash"] ?? "";
 $flashConfig = match ($flash) {
     "created" => [
@@ -18,6 +20,8 @@ $flashConfig = match ($flash) {
     ],
     default => null,
 };
+
+$currentUser = Auth::currentUser();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -66,13 +70,41 @@ $flashConfig = match ($flash) {
                 <span class="text-xs text-zinc-500 font-mono hidden sm:block"><?= date(
                     "d M Y",
                 ) ?></span>
-                <a href="<?= BASE_URL ?>/items/create"
-                   class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
-                    </svg>
-                    Add item
-                </a>
+
+                <?php if ($currentUser): ?>
+                    <!-- Add item button -->
+                    <a href="<?= BASE_URL ?>/items/create"
+                       class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                        </svg>
+                        Add item
+                    </a>
+
+                    <!-- User menu -->
+                    <div class="relative group">
+                        <button class="flex items-center gap-2 px-3 py-2 text-xs text-zinc-300 hover:text-white transition-colors">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span class="hidden sm:inline max-w-[100px] truncate"><?= htmlspecialchars($currentUser->username, ENT_QUOTES, "UTF-8") ?></span>
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+                            </svg>
+                        </button>
+                        <div class="absolute right-0 mt-1 w-48 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                            <div class="px-4 py-3 border-b border-zinc-700">
+                                <p class="text-xs text-zinc-400">Logged in as</p>
+                                <p class="text-sm font-medium text-zinc-100"><?= htmlspecialchars($currentUser->username, ENT_QUOTES, "UTF-8") ?></p>
+                                <p class="text-xs text-zinc-500"><?= htmlspecialchars($currentUser->email, ENT_QUOTES, "UTF-8") ?></p>
+                            </div>
+                            <form method="POST" action="<?= BASE_URL ?>/auth/logout" class="p-2">
+                                <?php csrf(); ?>
+                                <button type="submit" class="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-zinc-700 rounded transition-colors">
+                                    Sign out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </header>
