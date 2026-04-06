@@ -12,15 +12,20 @@ declare(strict_types=1);
 require_once __DIR__ . "/src/Core/Autoloader.php";
 
 use App\Core\Autoloader;
+use App\Core\Auth;
 use App\Controllers\ItemController;
 use App\Controllers\SearchController;
 use App\Controllers\AlertController;
+use App\Controllers\AuthController;
 
 Autoloader::register(__DIR__ . "/src");
 
-// Boot session for CSRF
+// Boot session for CSRF + Auth
 session_start();
 define("BASE_URL", "/proweblanjut-crud-a12-2025-07414");
+
+// Initialize authentication system (restore from session or remember-me cookie)
+Auth::initialize();
 
 // Generate CSRF token once per session
 if (empty($_SESSION["csrf_token"])) {
@@ -49,22 +54,29 @@ $uri = "/" . trim($uri, "/");
 $item = new ItemController();
 $search = new SearchController();
 $alert = new AlertController();
+$auth = new AuthController();
 
 match (true) {
-    // Create form
+    // Auth routes (public)
+    $method === "GET" && $uri === "/auth/login" => $auth->login(),
+    $method === "POST" && $uri === "/auth/auth" => $auth->auth(),
+    $method === "GET" && $uri === "/auth/register" => $auth->register(),
+    $method === "POST" && $uri === "/auth/store" => $auth->store(),
+    $method === "POST" && $uri === "/auth/logout" => $auth->logout(),
+
+    // Item routes (protected)
     $method === "GET" && $uri === "/items/create" => $item->create(),
-    // Store new item
     $method === "POST" && $uri === "/items/store" => $item->store(),
-    // Edit form
     $method === "GET" && $uri === "/items/edit" => $item->edit(),
-    // Update existing item
     $method === "POST" && $uri === "/items/update" => $item->update(),
-    // Delete item
     $method === "POST" && $uri === "/items/delete" => $item->delete(),
-    // Low-stock alert (partial or JSON)
+
+    // Low-stock alert (protected)
     $method === "GET" && $uri === "/alerts/low-stock" => $alert->lowStock(),
-    // Index / search (same view, SearchController handles both)
+
+    // Index / search (protected, SearchController handles both)
     $method === "GET" && $uri === "/" => $search->search(),
+
     // 404 fallback
     default => (static function () {
         http_response_code(404);
