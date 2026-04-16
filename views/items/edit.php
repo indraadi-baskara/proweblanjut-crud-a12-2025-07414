@@ -89,7 +89,11 @@ require __DIR__ . "/../layout/header.php";
             <?php if ($item->imagePath !== null): ?>
                 <div class="mt-3 mb-4">
                     <p class="text-xs font-medium text-zinc-400 mb-2">Gambar saat ini</p>
-                    <img src="<?= htmlspecialchars($item->imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                    <?php
+                    // Extract relative path from full URL
+                    $relativePath = str_replace(BASE_URL . "/public/uploads/", "", $item->imagePath);
+                    ?>
+                    <img src="<?= BASE_URL ?>/image.php?path=<?= urlencode($relativePath) ?>&size=200"
                          alt="<?= htmlspecialchars($item->itemName, ENT_QUOTES, 'UTF-8') ?>"
                          class="w-32 h-32 object-cover rounded-lg border border-zinc-700">
                 </div>

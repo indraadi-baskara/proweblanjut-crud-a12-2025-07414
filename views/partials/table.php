@@ -50,9 +50,14 @@
                 </td>
                 <td class="px-5 py-4">
                     <?php if ($item->imagePath !== null): ?>
-                        <img src="<?= htmlspecialchars($item->imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                        <?php
+                        // Extract relative path from full URL
+                        $relativePath = str_replace(BASE_URL . "/public/uploads/", "", $item->imagePath);
+                        ?>
+                        <img src="<?= BASE_URL ?>/image.php?path=<?= urlencode($relativePath) ?>&size=48"
                              alt="<?= htmlspecialchars($item->itemName, ENT_QUOTES, 'UTF-8') ?>"
-                             class="w-12 h-12 object-cover rounded-lg">
+                             class="w-12 h-12 object-cover rounded-lg"
+                             loading="lazy">
                     <?php else: ?>
                         <span class="text-zinc-600">—</span>
                     <?php endif; ?>
