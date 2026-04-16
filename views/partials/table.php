@@ -23,6 +23,7 @@
                 <th class="text-right px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Quantity</th>
                 <th class="text-right px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Price</th>
                 <th class="text-left px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Entry date</th>
+                <th class="text-left px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Photo</th>
                 <th class="text-left px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Status</th>
                 <th class="text-left px-5 py-3.5 text-xs font-medium text-zinc-500 uppercase tracking-widest">Actions</th>
             </tr>
@@ -46,6 +47,15 @@
                 </td>
                 <td class="px-5 py-4 text-zinc-400">
                     <?= $item->entryDate->format("d M Y") ?>
+                </td>
+                <td class="px-5 py-4">
+                    <?php if ($item->imagePath !== null): ?>
+                        <img src="<?= htmlspecialchars($item->imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                             alt="<?= htmlspecialchars($item->itemName, ENT_QUOTES, 'UTF-8') ?>"
+                             class="w-12 h-12 object-cover rounded-lg">
+                    <?php else: ?>
+                        <span class="text-zinc-600">—</span>
+                    <?php endif; ?>
                 </td>
                 <td class="px-5 py-4">
                     <?php if ($item->isLowStock($threshold)): ?>

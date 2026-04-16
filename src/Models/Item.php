@@ -14,6 +14,7 @@ final class Item
         public readonly int $quantity,
         public readonly float $price,
         public readonly DateTimeImmutable $entryDate,
+        public readonly ?string $imagePath = null,
     ) {}
 
     /**
@@ -29,6 +30,7 @@ final class Item
             quantity: (int) $row["quantity"],
             price: (float) $row["price"],
             entryDate: new DateTimeImmutable($row["entry_date"]),
+            imagePath: isset($row["image_path"]) ? (string) $row["image_path"] : null,
         );
     }
 
@@ -49,6 +51,7 @@ final class Item
             "quantity" => $this->quantity,
             "price" => $this->price,
             "entry_date" => $this->entryDate->format("Y-m-d"),
+            "image_path" => $this->imagePath,
         ];
     }
 }

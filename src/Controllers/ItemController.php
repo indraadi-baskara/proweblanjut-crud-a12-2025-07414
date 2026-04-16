@@ -44,6 +44,7 @@ final class ItemController
         Auth::verifyCsrf();
 
         $errors = $this->validate($_POST);
+        $imagePath = $this->handleImageUpload($errors);
 
         if (!empty($errors)) {
             $old = $_POST;
@@ -58,6 +59,7 @@ final class ItemController
             quantity: (int) $_POST["quantity"],
             price: (float) $_POST["price"],
             entryDate: $_POST["entry_date"],
+            imagePath: $imagePath,
         );
 
         $this->redirect("/?flash=created");
@@ -77,11 +79,17 @@ final class ItemController
 
         $item = $this->resolveItem();
         $errors = $this->validate($_POST);
+        $imagePath = $this->handleImageUpload($errors);
 
         if (!empty($errors)) {
             $old = $_POST;
             require __DIR__ . "/../../views/items/edit.php";
             return;
+        }
+
+        // Delete old image if new image is being uploaded
+        if ($imagePath !== null && $item->imagePath !== null) {
+            $this->deleteImageFile($item->imagePath);
         }
 
         $user = Auth::currentUser();
@@ -92,6 +100,7 @@ final class ItemController
             quantity: (int) $_POST["quantity"],
             price: (float) $_POST["price"],
             entryDate: $_POST["entry_date"],
+            imagePath: $imagePath,
         );
 
         $this->redirect("/?flash=updated");
@@ -170,6 +179,86 @@ final class ItemController
         }
 
         return $errors;
+    }
+
+    /**
+     * Handle image upload from $_FILES["image"].
+     * Returns the relative image path on success, null if no file or error.
+     * Adds error message to $errors array if validation fails.
+     *
+     * @param array<string, string> $errors
+     */
+    private function handleImageUpload(array &$errors): ?string
+    {
+        // Check if file was uploaded
+        if (!isset($_FILES["image"]) || $_FILES["image"]["error"] === UPLOAD_ERR_NO_FILE) {
+            return null;
+        }
+
+        $file = $_FILES["image"];
+
+        // Validate upload status
+        if ($file["error"] !== UPLOAD_ERR_OK) {
+            $errors["image"] = "File upload failed. Please try again.";
+            return null;
+        }
+
+        // Validate file size (max 2MB)
+        $maxSize = 2 * 1024 * 1024; // 2MB
+        if ($file["size"] > $maxSize) {
+            $errors["image"] = "File is too large. Maximum size is 2 MB.";
+            return null;
+        }
+
+        // Validate MIME type
+        $mimeType = mime_content_type($file["tmp_name"]);
+        $allowedMimes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+        if (!in_array($mimeType, $allowedMimes, true)) {
+            $errors["image"] = "Invalid file type. Only JPG, PNG, WebP, and GIF are allowed.";
+            return null;
+        }
+
+        // Generate unique filename and move file
+        $ext = match ($mimeType) {
+            "image/jpeg" => "jpg",
+            "image/png" => "png",
+            "image/webp" => "webp",
+            "image/gif" => "gif",
+            default => "jpg",
+        };
+
+        $filename = uniqid("item_", true) . "." . $ext;
+        $uploadDir = __DIR__ . "/../../public/uploads/items/";
+
+        // Ensure directory exists
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $filePath = $uploadDir . $filename;
+
+        if (!move_uploaded_file($file["tmp_name"], $filePath)) {
+            $errors["image"] = "Failed to save file. Please try again.";
+            return null;
+        }
+
+        // Return relative path for database storage
+        return BASE_URL . "/public/uploads/items/" . $filename;
+    }
+
+    /**
+     * Delete an image file from disk.
+     * Converts the URL path back to filesystem path.
+     */
+    private function deleteImageFile(string $imagePath): void
+    {
+        // Convert URL to filesystem path
+        $relativePath = str_replace(BASE_URL, "", $imagePath);
+        $filePath = __DIR__ . "/../../" . ltrim($relativePath, "/");
+
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
     }
 
     private function redirect(string $url): never

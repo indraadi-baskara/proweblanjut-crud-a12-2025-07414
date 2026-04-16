@@ -18,7 +18,7 @@ require __DIR__ . "/../layout/header.php";
 </div>
 
 <div class="max-w-lg mx-auto">
-    <form method="POST" action="<?= BASE_URL ?>/items/update" class="space-y-5">
+    <form method="POST" action="<?= BASE_URL ?>/items/update" enctype="multipart/form-data" class="space-y-5">
         <?php csrf(); ?>
         <input type="hidden" name="id" value="<?= $item->id ?>">
 
@@ -80,6 +80,58 @@ require __DIR__ . "/../layout/header.php";
         <?php
         endforeach;
         ?>
+
+        <!-- Image fieldset -->
+        <fieldset class="border border-zinc-800 rounded-xl p-4">
+            <legend class="text-sm font-medium text-zinc-300 px-2">Gambar Barang</legend>
+
+            <!-- Current image preview -->
+            <?php if ($item->imagePath !== null): ?>
+                <div class="mt-3 mb-4">
+                    <p class="text-xs font-medium text-zinc-400 mb-2">Gambar saat ini</p>
+                    <img src="<?= htmlspecialchars($item->imagePath, ENT_QUOTES, 'UTF-8') ?>"
+                         alt="<?= htmlspecialchars($item->itemName, ENT_QUOTES, 'UTF-8') ?>"
+                         class="w-32 h-32 object-cover rounded-lg border border-zinc-700">
+                </div>
+            <?php endif; ?>
+
+            <div class="mt-3">
+                <label for="image" class="block text-xs font-medium text-zinc-400 mb-2">
+                    <?php if ($item->imagePath !== null): ?>
+                        Ganti gambar (opsional)
+                    <?php else: ?>
+                        Pilih gambar
+                    <?php endif; ?>
+                </label>
+                <input
+                    type="file"
+                    id="image"
+                    name="image"
+                    accept="image/*"
+                    class="block w-full text-sm text-zinc-400
+                           file:mr-4 file:py-2.5 file:px-4
+                           file:rounded-xl file:border-0
+                           file:text-sm file:font-medium
+                           file:bg-zinc-800 file:text-zinc-200
+                           file:cursor-pointer
+                           hover:file:bg-zinc-700 file:transition-colors"
+                >
+                <p class="mt-2 text-xs text-zinc-500">
+                    <?php if ($item->imagePath !== null): ?>
+                        Opsional. Biarkan kosong jika tidak ingin mengubah gambar. JPG, PNG, WebP, atau GIF — maks. 2 MB
+                    <?php else: ?>
+                        Opsional. JPG, PNG, WebP, atau GIF — maks. 2 MB
+                    <?php endif; ?>
+                </p>
+                <?php if (isset($errors["image"])): ?>
+                    <p class="mt-1.5 text-xs text-red-400"><?= htmlspecialchars(
+                        $errors["image"],
+                        ENT_QUOTES,
+                        "UTF-8",
+                    ) ?></p>
+                <?php endif; ?>
+            </div>
+        </fieldset>
 
         <div class="flex items-center gap-3 pt-2">
             <button type="submit"

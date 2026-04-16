@@ -49,7 +49,7 @@ final class ItemRepository
         $total = (int) $countStmt->fetchColumn();
 
         $sql = <<<SQL
-            SELECT id, item_name, quantity, price, entry_date
+            SELECT id, item_name, quantity, price, entry_date, image_path
             FROM items
             WHERE {$whereClause}
             ORDER BY entry_date DESC, id DESC
@@ -98,7 +98,7 @@ final class ItemRepository
         $whereClause = implode(" AND ", $whereConditions);
 
         $stmt = $this->pdo->prepare(
-            "SELECT id, item_name, quantity, price, entry_date FROM items WHERE {$whereClause} LIMIT 1",
+            "SELECT id, item_name, quantity, price, entry_date, image_path FROM items WHERE {$whereClause} LIMIT 1",
         );
         $stmt->execute($params);
         $row = $stmt->fetch();
@@ -122,7 +122,7 @@ final class ItemRepository
         $whereClause = implode(" AND ", $whereConditions);
 
         $stmt = $this->pdo->prepare(
-            "SELECT id, item_name, quantity, price, entry_date
+            "SELECT id, item_name, quantity, price, entry_date, image_path
              FROM items WHERE {$whereClause} ORDER BY quantity ASC",
         );
         $stmt->execute($params);
@@ -139,10 +139,11 @@ final class ItemRepository
         int $quantity,
         float $price,
         string $entryDate,
+        ?string $imagePath = null,
     ): int {
         $stmt = $this->pdo->prepare(
-            'INSERT INTO items (user_id, item_name, quantity, price, entry_date)
-             VALUES (:user_id, :item_name, :quantity, :price, :entry_date)',
+            'INSERT INTO items (user_id, item_name, quantity, price, entry_date, image_path)
+             VALUES (:user_id, :item_name, :quantity, :price, :entry_date, :image_path)',
         );
 
         $stmt->execute([
@@ -151,6 +152,7 @@ final class ItemRepository
             ":quantity" => $quantity,
             ":price" => $price,
             ":entry_date" => $entryDate,
+            ":image_path" => $imagePath,
         ]);
 
         return (int) $this->pdo->lastInsertId();
@@ -158,6 +160,7 @@ final class ItemRepository
 
     /**
      * Update item. Validates ownership by user_id.
+     * If $imagePath is null, the image_path column is not updated.
      */
     public function update(
         int $id,
@@ -166,22 +169,35 @@ final class ItemRepository
         int $quantity,
         float $price,
         string $entryDate,
+        ?string $imagePath = null,
     ): bool {
-        $stmt = $this->pdo->prepare(
-            'UPDATE items
-             SET item_name = :item_name, quantity = :quantity,
-                 price = :price, entry_date = :entry_date
-             WHERE id = :id AND user_id = :user_id',
-        );
-
-        return $stmt->execute([
+        // Build dynamic SET clause depending on whether image_path should be updated
+        $setClauses = [
+            "item_name = :item_name",
+            "quantity = :quantity",
+            "price = :price",
+            "entry_date = :entry_date",
+        ];
+        $params = [
             ":id" => $id,
             ":user_id" => $userId,
             ":item_name" => $itemName,
             ":quantity" => $quantity,
             ":price" => $price,
             ":entry_date" => $entryDate,
-        ]);
+        ];
+
+        if ($imagePath !== null) {
+            $setClauses[] = "image_path = :image_path";
+            $params[":image_path"] = $imagePath;
+        }
+
+        $setClause = implode(", ", $setClauses);
+        $stmt = $this->pdo->prepare(
+            "UPDATE items SET {$setClause} WHERE id = :id AND user_id = :user_id",
+        );
+
+        return $stmt->execute($params);
     }
 
     /**

@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS items (
     quantity INT UNSIGNED NOT NULL DEFAULT 0,
     price DECIMAL(15, 2) NOT NULL,
     entry_date DATE NOT NULL,
+    image_path VARCHAR(500) NULL DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
@@ -106,3 +107,8 @@ VALUES (
         275000,
         '2025-03-08'
     );
+
+-- -------------------------------------------------------------------------
+-- Migration: For existing installations, run this to add image_path column:
+-- ALTER TABLE items ADD COLUMN image_path VARCHAR(500) NULL DEFAULT NULL AFTER entry_date;
+-- -------------------------------------------------------------------------
