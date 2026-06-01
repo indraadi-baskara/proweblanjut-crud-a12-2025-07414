@@ -17,6 +17,7 @@ use App\Controllers\ItemController;
 use App\Controllers\SearchController;
 use App\Controllers\AlertController;
 use App\Controllers\AuthController;
+use App\Controllers\Api\ItemApiController;
 
 Autoloader::register(__DIR__ . "/src");
 
@@ -52,6 +53,7 @@ $uri = "/" . trim($uri, "/");
 // -------------------------------------------------------------------------
 
 $item = new ItemController();
+$itemApi = new ItemApiController();
 $search = new SearchController();
 $alert = new AlertController();
 $auth = new AuthController();
@@ -63,7 +65,17 @@ match (true) {
     $method === "GET" && $uri === "/auth/register" => $auth->register(),
     $method === "POST" && $uri === "/auth/store" => $auth->store(),
     $method === "POST" && $uri === "/auth/logout" => $auth->logout(),
-    // Item routes (protected)
+    // API routes (protected, JSON responses)
+    $method === "GET" && $uri === "/api/items" => $itemApi->list(),
+    $method === "POST" && $uri === "/api/items" => $itemApi->store(),
+    $method === "PUT" && $uri === "/api/items/update" => $itemApi->update(),
+    $method === "DELETE" && $uri === "/api/items/delete" => $itemApi->delete(),
+    // API UI (protected, consumes JSON API)
+    $method === "GET" && $uri === "/items/api" => (function () {
+        Auth::requireAuth();
+        require __DIR__ . "/views/items/api-index.php";
+    })(),
+    // Item routes (protected, view-based)
     $method === "GET" && $uri === "/items/create" => $item->create(),
     $method === "POST" && $uri === "/items/store" => $item->store(),
     $method === "GET" && $uri === "/items/edit" => $item->edit(),
